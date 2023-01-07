@@ -1,0 +1,274 @@
+esphome:
+  name: esp32-1
+  platformio_options:
+    board_upload.flash_size: 4MB
+    board_upload.maximum_ram_size: 327680
+    board_upload.maximum_size: 4194304
+    board_build.partitions: "/config/esphome/custom_partitions.csv"
+  includes:
+    - "adafruit_vcnl4040.h"
+  libraries:
+    - Wire
+    - SPI
+    - adafruit/Adafruit BusIO@^1.14.1
+    - adafruit/Adafruit VCNL4040@^1.0.2
+
+
+esp32:
+  board: adafruit_feather_esp32s3_tft
+  variant: esp32s3
+  framework:
+    type: arduino
+    version: 2.0.5
+    platform_version: 5.2.0
+
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "8mYEvd9ww6yHscz21PwFCIGvYinh7S8wTSlAxpvFrC8="
+
+ota:
+  password: "9a19f516b97c3a07af74ae5feb8297dc"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  # ap:
+  #   ssid: "Adafruit-Esp32S3-Tft"
+  #   password: "U5UZ2oNKUSib"
+
+# captive_portal:
+# web_server:
+#   port: 80
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+color:
+  - id: my_red
+    red: 100%
+    green: 100%
+    blue: 0%
+  - id: my_yellow
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: my_green
+    red: 100%
+    green: 0%
+    blue: 100%
+  # - id: my_cyan
+  #   red: 0%
+  #   green: 100%
+  #   blue: 100%
+  # - id: my_blue
+  #   red: 0%
+  #   green: 0%
+  #   blue: 100%
+  - id: my_magenta
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: my_white
+    red: 0%
+    green: 0%
+    blue: 0%
+  # - id: my_gray
+  #   red: 50%
+  #   green: 50%
+  #   blue: 50%
+  - id: my_black
+    red: 100%
+    green: 100%
+    blue: 100%
+
+spi:
+  clk_pin: GPIO36
+  mosi_pin: GPIO35
+  miso_pin: GPIO37
+
+font:
+  # - file: "Roboto-Regular.ttf"
+  #   id: roboto_12
+  #   size: 12
+  - file: "gfonts://Roboto"
+    id: font_superlarge
+    size: 92
+    glyphs:
+      [':', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%', 'n', 'a']    
+
+  - file: "gfonts://Roboto@medium"
+    id: font_large
+    size: 58
+    glyphs:
+      [':', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '%', 'n', 'a']    
+
+  - file: "gfonts://Roboto@bold"
+    id: font_medium
+    size: 28
+    glyphs:
+      [',', '.', '"', '%', '+', '-', '_', ':', '°', '0',
+       '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+       'u', 'v', 'w', 'x', 'y', 'z', '/', '|', '''']    
+
+image:
+  - file: "pics/koolau-1.jpg"
+    id: koolau_1
+    type: RGB24
+  - file: "pics/koaloha-1.jpg"
+    id: koaloha_1
+    type: RGB24
+
+display:
+  - platform: st7735 #st7735 works
+    model: INITR_REDTAB
+    device_width: 240
+    device_height: 135
+    row_start: 52 #top starting point
+    col_start: 40 #left starting point
+    # backlight_pin: GPIO45
+    use_bgr: True
+    # eight_bit_color: true
+    # invert_colors: True
+    rotation: 0
+    cs_pin: GPIO7
+    dc_pin: GPIO39
+    reset_pin: GPIO40
+    update_interval: 1s
+    id: my_display
+    pages:
+      - id: date_time
+        lambda: |-
+          it.filled_rectangle(0,  0, 240, 135, id(my_black));
+          it.strftime(it.get_width()/2, it.get_height()/2 - 20, id(font_superlarge), id(my_white), TextAlign::CENTER, "%H:%M", id(esptime).now());
+          it.strftime(25, it.get_height()/2 + 45, id(font_medium), id(my_yellow), TextAlign::CENTER_VERTICAL, "%a", id(esptime).now());
+          it.strftime(it.get_width()/2, it.get_height()/2 + 45, id(font_medium), id(my_white), TextAlign::CENTER_VERTICAL, "%m/%d", id(esptime).now());
+      - id: page4
+        lambda: |-
+          it.filled_rectangle(0,  0, 240, 135, id(my_black));
+          it.rectangle(0, 0, it.get_width(), it.get_height(), id(my_magenta));
+          it.print(it.get_width()/4, it.get_height()/2-30, id(font_medium), id(my_yellow), TextAlign::CENTER, "Room");
+          it.printf(it.get_width()/4, 85, id(font_large), id(my_green), TextAlign::CENTER, "%.0f%%", id(room_humidity).state);
+          it.filled_rectangle(it.get_width()/2-1, 0, 2, it.get_height(), id(my_magenta));
+          it.print(it.get_width()-3, 10, id(font_medium), id(my_yellow), TextAlign::TOP_RIGHT, "KoAloha");
+          it.printf(it.get_width()-3, 37, id(font_medium), id(my_green), TextAlign::TOP_RIGHT, "%.0f%%", id(uke_koaloha_humidity).state);
+          it.print(it.get_width()-3, 70, id(font_medium), id(my_yellow), TextAlign::TOP_RIGHT, "Ko'olau");
+          it.printf(it.get_width()-3, 97, id(font_medium), id(my_green), TextAlign::TOP_RIGHT, "%.0f%%", id(uke_koolau_humidity).state);
+
+      # - id: page1
+      #   lambda: |-
+      #     it.filled_rectangle(0,  0, 240, 135, id(my_black));
+      #     it.image(0, 0, id(koolau_1));
+      #     it.print(it.get_width(), 0, id(font_medium), id(my_magenta), TextAlign::TOP_RIGHT, "Ko'olau");
+      #     it.printf(it.get_width(), 45, id(font_large), id(my_green), TextAlign::TOP_RIGHT, "%.0f%%", id(uke_koolau_humidity).state);
+      # - id: page2
+      #   lambda: |-
+      #     it.filled_rectangle(0,  0, 240, 135, id(my_black));
+      #     it.image(0, 0, id(koaloha_1));
+      #     it.print(it.get_width(), 0, id(font_medium), id(my_yellow), TextAlign::TOP_RIGHT, "KoAloha");
+      #     it.printf(it.get_width(), 45, id(font_large), id(my_green), TextAlign::TOP_RIGHT, "%.0f%%", id(uke_koaloha_humidity).state);
+      
+interval:
+  - interval: 10s
+    then:
+      - display.page.show_next: my_display
+      - component.update: my_display
+
+i2c:
+  sda: GPIO42 # See pin chart for esp32s3-tft. https://github.com/adafruit/Adafruit-ESP32-S3-TFT-Feather-PCB/blob/main/Adafruit%20ESP32-S3%20TFT%20Feather%20Pinout.pdf
+  scl: GPIO41
+  scan: True
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: False
+    continuous: True
+
+sensor:
+  - platform: pvvx_mithermometer
+    mac_address: "A4:C1:38:FD:53:BE"
+    temperature:
+      id: uke_koaloha_temp
+      name: "Uke1 Temperature"
+    humidity:
+      id: uke_koaloha_humidity      
+      name: "Uke1 Humidity"
+    battery_level:
+      name: "Uke1 Battery-Level"
+    battery_voltage:
+      name: "Uke1 Battery-Voltage"
+    signal_strength:
+      name: "Uke1 Signal"
+
+  - platform: pvvx_mithermometer
+    mac_address: "A4:C1:38:CC:75:01"
+    id: uke_koolau
+    temperature:
+      id: uke_koolau_temp      
+      name: "Uke2 Temperature"
+    humidity:
+      id: uke_koolau_humidity      
+      name: "Uke2 Humidity"
+    battery_level:
+      name: "Uke2 Battery-Level"
+    battery_voltage:
+      name: "Uke2 Battery-Voltage"
+    signal_strength:
+      name: "Uke2 Signal"
+
+  - platform: aht10
+    temperature:
+      id: room_temp
+      name: "Room Temperature"
+    humidity:
+      id: room_humidity
+      name: "Room Humidity"
+    update_interval: 60s
+
+  - platform: custom
+    lambda: |-
+      auto vcnl4040_sensor = new VCNL4040Sensor();
+      App.register_component(vcnl4040_sensor);
+      return {vcnl4040_sensor->lux_sensor, vcnl4040_sensor->proximity_sensor, vcnl4040_sensor->whitelight_sensor};
+    sensors:
+    - name: "VCNL4040-LUX"
+      id: vcnl4040_lux
+      unit_of_measurement: "lx"      
+      accuracy_decimals: 0
+      on_value_range:
+        - below: 10
+          then:
+            - switch.turn_off: tft_backlight
+        - above: 10
+          then:
+            - switch.turn_on: tft_backlight            
+    - name: "VCNL4040-PROXIMITY"
+      id: vcnl4040_proximity
+      unit_of_measurement: "mm"
+      accuracy_decimals: 0
+    - name: "VCNL4040-WHITELIGHT"
+      id: vcnl4040_whitelight
+      unit_of_measurement: "lx"
+      accuracy_decimals: 0
+
+
+switch:
+#   - platform: gpio
+#     name: "TFT_I2C_POWER"
+#     pin: GPIO21
+#     restore_mode: ALWAYS_ON
+  - platform: gpio
+    name: "TFT_BACKLIGHT"
+    id: tft_backlight
+    pin: GPIO45
+    # restore_mode: ALWAYS_ON
