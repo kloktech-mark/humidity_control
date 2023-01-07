@@ -1,7 +1,7 @@
 # Humidity Monitoring and Control for Musical Instrument
 
 Detail Write Up
-https://medium.com/@linmark333/controlling-humidity-for-ukulele-1b6de8c3cf78
+https://medium.com/devops-one-problem-at-a-time/controlling-humidity-for-ukulele-1b6de8c3cf78
 
 Hardwares:
 - Adafruit ESP32S3-TFT
