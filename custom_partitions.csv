@@ -1,0 +1,9 @@
+# Name,   Type, SubType,  Offset,   Size,  Flags
+nvs,      data, nvs,      0x9000,  20K,
+otadata,  data, ota,      0xe000,  8K,
+# Increased OTA partition from 1.4M to 1.8M 
+ota_0,    app,    ota_0,   ,  1808K,
+ota_1,    app,    ota_1,  ,  1808K,
+uf2,      app,  factory,,  256K,
+#ffat,     data, fat,    ,  960K,
+

@@ -19,8 +19,8 @@ esp32:
   variant: esp32s3
   framework:
     type: arduino
-    version: 2.0.5
-    platform_version: 5.2.0
+    version: 2.0.6
+    platform_version: 5.3.0
 
 # Enable logging
 logger:
@@ -44,8 +44,8 @@ wifi:
   #   password: "U5UZ2oNKUSib"
 
 # captive_portal:
-# web_server:
-#   port: 80
+web_server:
+  port: 80
 
 time:
   - platform: homeassistant
@@ -233,6 +233,32 @@ sensor:
     humidity:
       id: room_humidity
       name: "Room Humidity"
+      on_value_range:
+        - above: 39
+          below: 61
+          then:
+            - lambda: |-
+                auto call = id(fastled).turn_on();
+                call.set_rgb(0.0, 1.0, 0.0);
+                call.set_brightness(0.1);
+                // Transition of 1000ms = 1s
+                call.set_effect("none");
+                call.perform();
+        - below: 39
+          then:
+            - lambda: |-
+                auto call = id(fastled).turn_on();
+                call.set_rgb(1.0, 0.0, 0.0);
+                call.set_effect("Fast Pulse");
+                call.perform();
+        - above: 61
+          then:
+            - lambda: |-
+                auto call = id(fastled).turn_on();
+                call.set_rgb(0.0, 0.0, 1.0);
+                call.set_effect("Slow Pulse");
+                call.perform();
+
     update_interval: 60s
 
   - platform: custom
@@ -249,9 +275,11 @@ sensor:
         - below: 10
           then:
             - switch.turn_off: tft_backlight
+            - light.turn_off: fastled
         - above: 10
           then:
-            - switch.turn_on: tft_backlight            
+            - switch.turn_on: tft_backlight
+            - light.turn_on: fastled
     - name: "VCNL4040-PROXIMITY"
       id: vcnl4040_proximity
       unit_of_measurement: "mm"
@@ -272,3 +300,23 @@ switch:
     id: tft_backlight
     pin: GPIO45
     # restore_mode: ALWAYS_ON
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2811
+    pin: GPIO33
+    num_leds: 1
+    rgb_order: GRB
+    id: "fastled"
+    name: "FastLED WS2811 Light"
+    effects:
+      - pulse:
+      - pulse:
+          name: "Fast Pulse"
+          transition_length: 0.5s
+          update_interval: 0.5s
+      - pulse:
+          name: "Slow Pulse"
+          # transition_length: 1s      # defaults to 1s
+          update_interval: 2s    
+
